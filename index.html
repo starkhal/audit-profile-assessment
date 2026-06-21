@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-audit Profile Assessment — AF KL Cybersecurity</title>
+<style>
+  :root {
+    --bg:         #0e1726;
+    --panel:      #16223a;
+    --line:       #23344f;
+    --ink:        #e8eef7;
+    --ink-soft:   #9fb0c9;
+    --ink-faint:  #697d9e;
+    --accent:     #f0a830;
+    --ok:         #3ecf8e;
+    --no:         #ec5f6a;
+    --blue:       #5b8bd4;
+    --radius:     10px;
+    --mono: 'SFMono-Regular', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background:
+      radial-gradient(1000px 500px at 80% -5%, #1a2b47 0%, transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 20px; }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #0f1a2c, #0e1726);
+    position: sticky; top: 0; z-index: 40;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 14px 0;
+  }
+  .brand { display: flex; flex-direction: column; gap: 3px; }
+  .brand-tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .brand-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  .progress-bar { height: 3px; background: #1a2740; }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--blue), var(--ok));
+    transition: width .3s ease; width: 0%;
+  }
+
+  /* ── Hero ── */
+  .hero { padding: 40px 0 32px; }
+  .hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -.02em; line-height: 1.2; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+
+  /* ── Section label ── */
+  .section-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-faint);
+    border-bottom: 1px solid var(--line); padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Question card ── */
+  .q-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 22px;
+    margin-bottom: 12px; transition: border-color .2s;
+  }
+  .q-card.answered { border-color: #2a3f60; }
+
+  .q-header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+
+  .q-num {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    color: var(--accent); background: #0e1726; border: 1px solid var(--line);
+    border-radius: 6px; padding: 3px 9px; white-space: nowrap;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  .q-text { font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+  /* Yes / No toggle buttons */
+  .q-options { display: flex; gap: 8px; }
+  .q-options input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+  .q-options label {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    letter-spacing: .04em; padding: 9px 22px; border-radius: 7px;
+    border: 1px solid var(--line); background: #0e1726;
+    color: var(--ink-soft); cursor: pointer; transition: .12s;
+    user-select: none;
+  }
+  .q-options label:hover { border-color: var(--ink-faint); color: var(--ink); }
+  input[value="yes"]:checked + label { background: rgba(62,207,142,.15); border-color: var(--ok); color: var(--ok); }
+  input[value="no"]:checked  + label { background: rgba(107,122,147,.15); border-color: #4a5568; color: var(--ink-soft); }
+
+  /* ── Error ── */
+  .form-error {
+    display: none; background: rgba(236,95,106,.1); border: 1px solid rgba(236,95,106,.35);
+    border-radius: 8px; color: var(--no); font-size: 13px;
+    padding: 12px 16px; margin-bottom: 16px;
+  }
+  .form-error.visible { display: block; }
+
+  /* ── Actions ── */
+  .actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+
+  .btn-primary {
+    font-family: var(--sans); font-size: 14px; font-weight: 600;
+    padding: 13px 28px; border-radius: var(--radius); border: none;
+    background: var(--accent); color: #111; cursor: pointer; transition: .15s;
+  }
+  .btn-primary:hover { background: #f5b842; }
+
+  .btn-ghost {
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    padding: 12px 20px; border-radius: var(--radius);
+    border: 1px solid var(--line); background: transparent;
+    color: var(--ink-soft); cursor: pointer; transition: .15s;
+  }
+  .btn-ghost:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+  /* ── Results ── */
+  #results {
+    display: none; margin-top: 40px;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--panel); overflow: hidden;
+  }
+
+  .result-banner { padding: 28px 28px 24px; border-bottom: 1px solid var(--line); }
+  .result-banner.generalist { background: rgba(62,207,142,.07); }
+  .result-banner.specialist  { background: rgba(240,168,48,.07); }
+
+  .result-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px;
+  }
+  .result-profile {
+    font-size: 34px; font-weight: 800; letter-spacing: -.02em;
+    line-height: 1; margin-bottom: 6px;
+  }
+  .result-profile.generalist { color: var(--ok); }
+  .result-profile.specialist  { color: var(--accent); }
+  .result-score { font-family: var(--mono); font-size: 14px; color: var(--ink-soft); }
+  .result-score span { color: var(--ink); font-weight: 600; }
+
+  .result-body { padding: 22px 28px; }
+
+  .result-date {
+    font-size: 13px; color: var(--ink-faint); margin-bottom: 16px;
+    font-family: var(--mono);
+  }
+
+  .result-reco {
+    font-size: 14px; color: var(--ink-soft); line-height: 1.7;
+    background: #0e1726; border: 1px solid var(--line);
+    border-radius: 8px; padding: 16px 18px;
+  }
+  .result-reco strong { color: var(--ink); }
+
+  /* Answer summary (no points shown) */
+  .breakdown {
+    margin-top: 18px; display: grid;
+    grid-template-columns: repeat(7, 1fr); gap: 8px;
+  }
+  .bd-item {
+    background: #0e1726; border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 8px; text-align: center;
+  }
+  .bd-item .bd-q { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-bottom: 6px; }
+  .bd-item .bd-ans { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+  .bd-item.yes .bd-ans { color: var(--ok); }
+  .bd-item.no  .bd-ans { color: var(--ink-faint); }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+  .btn-export {
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    padding: 11px 20px; border-radius: 8px;
+    border: 1px solid var(--blue); background: transparent;
+    color: var(--blue); cursor: pointer; transition: .15s;
+  }
+  .btn-export:hover { background: rgba(91,139,212,.12); }
+
+  /* ── Footer ── */
+  footer {
+    padding: 40px 0; color: var(--ink-faint); font-size: 12px;
+    border-top: 1px solid var(--line); margin-top: 60px;
+    font-family: var(--mono);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 560px) {
+    .hero h1 { font-size: 22px; }
+    .result-profile { font-size: 26px; }
+    .breakdown { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="brand">
+      <span class="brand-tag">AF KL — Cybersecurity</span>
+      <span class="brand-title">Pre-audit profile assessment</span>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>What is your audit profile? <em>7 questions to find out.</em></h1>
+  </section>
+
+  <form id="auditForm" novalidate>
+
+    <div class="section-label">Questions — <span id="progressText">0 / 7 answered</span></div>
+
+    <div id="questionsContainer"></div>
+
+    <div id="formError" class="form-error">
+      Please answer all 7 questions before submitting.
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary">Evaluate my profile →</button>
+      <button type="button" class="btn-ghost" id="btnReset">Reset</button>
+    </div>
+
+  </form>
+
+  <section id="results">
+    <div class="result-banner" id="resultBanner">
+      <div class="result-label">Assessed profile</div>
+      <div class="result-profile" id="resultProfile"></div>
+      <div class="result-score" id="resultScore"></div>
+    </div>
+    <div class="result-body">
+      <div class="result-date" id="resultDate"></div>
+      <div class="result-reco" id="resultReco"></div>
+      <div class="breakdown" id="resultBreakdown"></div>
+      <div class="result-actions">
+        <button class="btn-export" id="btnExport">↓ Export result (.txt)</button>
+        <button class="btn-ghost" id="btnResetFromResult">New assessment</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">AF KL — Internal qualification tool · All data stays in your browser, nothing is transmitted.</div>
+</footer>
+
+<script>
+'use strict';
+
+const QUESTIONS = [
+  { id: 1, weight: 1, text: "Have you already successfully completed a security questionnaire (ISR) or a cybersecurity audit document (due diligence, certification)?" },
+  { id: 2, weight: 3, text: "Do you have direct professional experience in information security?" },
+  { id: 3, weight: 1, text: "Have you completed training on the GDPR regulation?" },
+  { id: 4, weight: 3, text: "Do you have an overall view of the technical and organisational architecture of the scope covered by your project (not just your own area of expertise)?" },
+  { id: 5, weight: 1, text: "Are you familiar with the standard security measures already in place for AF KL IT architectures?" },
+  { id: 6, weight: 3, text: "Are you able to answer technical questions on the main classic security domains without needing to consult another person?" },
+  { id: 7, weight: 1, text: "Do you have access to the internal documentation required to understand security at AF KL (policies, procedures, registers) to support your answers?" },
+];
+
+const MAX_SCORE = 13;
+const THRESHOLD = 8;
+
+const RECO = {
+  generalist: `<strong>You can respond to the audit on your own.</strong> Your level of experience and cross-functional knowledge allow you to address all security domains without external support. Make sure you have the relevant internal documentation available to back up your answers.`,
+  specialist:  `<strong>It is recommended that you be supported by a security advisor.</strong> Your domain expertise is valuable, but the audit covers areas where the support of an AF KL cybersecurity expert will allow you to respond accurately and avoid non-conformities.`,
+};
+
+/* ── Render questions ── */
+const container = document.getElementById('questionsContainer');
+
+QUESTIONS.forEach(q => {
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.id = `card-${q.id}`;
+  card.innerHTML = `
+    <div class="q-header">
+      <span class="q-num">Q${q.id}</span>
+      <span class="q-text">${q.text}</span>
+    </div>
+    <div class="q-options">
+      <input type="radio" name="q${q.id}" id="q${q.id}_yes" value="yes">
+      <label for="q${q.id}_yes">Yes</label>
+      <input type="radio" name="q${q.id}" id="q${q.id}_no" value="no">
+      <label for="q${q.id}_no">No</label>
+    </div>`;
+  container.appendChild(card);
+});
+
+/* ── Progress ── */
+function countAnswered() {
+  return QUESTIONS.filter(q => document.querySelector(`input[name="q${q.id}"]:checked`)).length;
+}
+
+function updateProgress() {
+  const n = countAnswered();
+  document.getElementById('progressText').textContent = `${n} / 7 answered`;
+  document.getElementById('progressFill').style.width = `${(n / 7) * 100}%`;
+  QUESTIONS.forEach(q => {
+    const done = !!document.querySelector(`input[name="q${q.id}"]:checked`);
+    document.getElementById(`card-${q.id}`).classList.toggle('answered', done);
+  });
+}
+
+container.addEventListener('change', updateProgress);
+
+/* ── Scoring ── */
+function calcScore() {
+  return QUESTIONS.reduce((sum, q) => {
+    const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+    return sum + (checked?.value === 'yes' ? q.weight : 0);
+  }, 0);
+}
+
+/* ── Submit ── */
+document.getElementById('auditForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const err = document.getElementById('formError');
+
+  if (countAnswered() < 7) {
+    err.classList.add('visible');
+    for (const q of QUESTIONS) {
+      if (!document.querySelector(`input[name="q${q.id}"]:checked`)) {
+        document.getElementById(`card-${q.id}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+    }
+    return;
+  }
+
+  err.classList.remove('visible');
+
+  const score   = calcScore();
+  const isGen   = score >= THRESHOLD;
+  const profile = isGen ? 'GENERALIST' : 'SPECIALIST';
+  const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // Banner
+  document.getElementById('resultBanner').className = `result-banner ${isGen ? 'generalist' : 'specialist'}`;
+  const profileEl = document.getElementById('resultProfile');
+  profileEl.className = `result-profile ${isGen ? 'generalist' : 'specialist'}`;
+  profileEl.textContent = profile;
+
+  document.getElementById('resultScore').innerHTML =
+    `Score: <span>${score} / ${MAX_SCORE}</span> — Threshold: ${THRESHOLD} / ${MAX_SCORE}`;
+
+  document.getElementById('resultDate').textContent = `Assessed on ${dateStr}`;
+
+  document.getElementById('resultReco').innerHTML = RECO[isGen ? 'generalist' : 'specialist'];
+
+  // Breakdown — Yes/No only, no points shown
+  const bdEl = document.getElementById('resultBreakdown');
+  bdEl.innerHTML = '';
+  QUESTIONS.forEach(q => {
+    const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+    const isYes   = checked?.value === 'yes';
+    const item    = document.createElement('div');
+    item.className = `bd-item ${isYes ? 'yes' : 'no'}`;
+    item.innerHTML = `<div class="bd-q">Q${q.id}</div><div class="bd-ans">${isYes ? 'Yes' : 'No'}</div>`;
+    bdEl.appendChild(item);
+  });
+
+  // Store for export
+  const res = document.getElementById('results');
+  res.dataset.date    = dateStr;
+  res.dataset.score   = score;
+  res.dataset.profile = profile;
+  res.dataset.isGen   = isGen;
+
+  res.style.display = 'block';
+  res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+/* ── Export ── */
+document.getElementById('btnExport').addEventListener('click', () => {
+  const d = document.getElementById('results').dataset;
+
+  const answers = QUESTIONS.map(q => {
+    const checked = document.querySelector(`input[name="q${q.id}"]:checked`);
+    const rep     = checked?.value === 'yes' ? 'Yes' : 'No';
+    return `  Q${q.id} : ${rep}`;
+  }).join('\n');
+
+  const recoText = d.isGen === 'true'
+    ? 'You can respond to the audit on your own.'
+    : 'Support from a security advisor is recommended.';
+
+  const content = [
+    '══════════════════════════════════════════════════',
+    '  PRE-AUDIT PROFILE ASSESSMENT — AF KL CYBERSECURITY',
+    '══════════════════════════════════════════════════',
+    '',
+    `  Date       : ${d.date}`,
+    '',
+    '──────────────────────────────────────────────────',
+    '  RESULT',
+    '──────────────────────────────────────────────────',
+    '',
+    `  Profile    : ${d.profile}`,
+    `  Score      : ${d.score} / ${MAX_SCORE}  (threshold: ${THRESHOLD} / ${MAX_SCORE})`,
+    `  Decision   : ${recoText}`,
+    '',
+    '──────────────────────────────────────────────────',
+    '  ANSWERS',
+    '──────────────────────────────────────────────────',
+    '',
+    answers,
+    '',
+    '══════════════════════════════════════════════════',
+    '  AF KL — Internal qualification tool',
+    '══════════════════════════════════════════════════',
+  ].join('\n');
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `profile_assessment_${d.date.replace(/ /g, '_')}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ── Reset ── */
+function resetAll() {
+  document.getElementById('auditForm').reset();
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('formError').classList.remove('visible');
+  QUESTIONS.forEach(q => document.getElementById(`card-${q.id}`).classList.remove('answered'));
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('btnReset').addEventListener('click', resetAll);
+document.getElementById('btnResetFromResult').addEventListener('click', resetAll);
+</script>
+
+</body>
+</html>
